@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>미술 작품 추천 프로그램 (ArtMix + 작품 추가 기능 확장)</title>
+    <style>
+        /* ArtMix 디자인 스타일 */
+        body {
+            margin: 0;
+            font-family: "맑은 고딕", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f7fb;
+        }
+
+        header {
+            background: #283593;
+            color: white;
+            padding: 16px 24px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        header p {
+            margin: 4px 0 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        main.app-container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px 24px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+        }
+        
+        @media (max-width: 1024px) {
+            main.app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 12px 14px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+        }
+
+        h2 {
+            font-size: 16px;
+            margin: 0 0 8px;
+        }
+        
+        .mini-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 12px 0 6px;
+            padding-top: 8px;
+            border-top: 1px dashed #e0e0e0;
+        }
+        
+        .mini-section-title:first-child {
+             border-top: none;
+             padding-top: 0;
+             margin-top: 0;
+        }
+
+        .subtitle {
+            font-size: 11px;
+            color: #616161;
+            margin-bottom: 8px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            margin: 6px 0 2px;
+            font-weight: 600;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid #c5cae9;
+            font-size: 12px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            border-radius: 999px;
+            border: none;
+            padding: 6px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 6px;
+        }
+
+        .btn-primary {
+            background: #283593;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #eeeeee;
+            color: #212121;
+        }
+
+        .btn-primary:hover {
+            background: #1a237e;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .list-small {
+            font-size: 11px;
+            padding-left: 14px;
+            margin: 0 0 10px 0;
+        }
+
+        .list-small li {
+            margin-bottom: 3px;
+        }
+
+        #resultContent {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-top: 10px;
+        }
+
+        .art-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 10px;
+            background: #fafbff;
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+        }
+
+        .art-image {
+            flex: 0 0 150px;
+            max-width: 150px;
+        }
+
+        .art-image img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .art-info {
+            flex: 1 1 auto;
+        }
+
+        .art-info h3 {
+            font-weight: 700;
+            font-size: 13px;
+            margin-top: 0;
+            margin-bottom: 4px;
+        }
+
+        .art-info p {
+            margin: 4px 0;
+            font-size: 11px;
+        }
+
+        .art-info strong {
+            font-weight: 600;
+        }
+
+        .chips {
+            margin-top: 6px;
+        }
+        
+        .hashtag, .chip {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: #e3f2fd;
+            color: #212121;
+            margin-right: 4px;
+            margin-bottom: 4px;
+            border: 1px solid #bbdefb;
+            cursor: pointer;
+        }
+
+        .back-controls {
+            margin-top: 15px;
+            font-size: 12px;
+            padding: 8px;
+            border-top: 1px dashed #c5cae9;
+        }
+
+        .back-controls label {
+             display: inline;
+             font-weight: 400;
+             margin-right: 5px;
+        }
+
+        .back-controls select {
+            width: auto;
+            display: inline-block;
+            min-width: 150px;
+        }
+
+        .no-result {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #b00020;
+            padding: 8px;
+            background: #ffebee;
+            border-radius: 6px;
+        }
+
+        .step small {
+             font-size: 10px;
+             color: #757575;
+             margin-bottom: 5px;
+             display: block;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .art-card {
+                flex-direction: column;
+            }
+            .art-image {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>ArtMix – 미술 작품 추천 단계별 필터 및 개인 공간</h1>
+        <p>단계별 필터링, 컬렉션, 연속 감상, 취향 기반 추천, 그리고 직접 작품 추가 기능을 통합한 미술 플랫폼 프로토타입입니다.</p>
+    </header>
+
+<main class="app-container">
+    <div class="main-content">
+        <div class="step panel" id="step1">
+            <h2>1. 서양미술 / 동양미술 선택</h2>
+            <small>먼저 전체적인 흐름을 정해요.</small>
+            <label for="traditionSelect">미술 범주</label>
+            <select id="traditionSelect">
+                <option value="">-- 선택하세요 --</option>
+                <option value="서양">서양미술</option>
+                <option value="동양">동양미술</option>
+            </select>
+        </div>
+
+        <div class="step hidden panel" id="stepRegion">
+            <h2>1-2. 동양 미술 세부 선택</h2>
+            <small>동양 미술을 선택했다면, 지역을 고르세요.</small>
+            <label for="regionSelect">지역</label>
+            <select id="regionSelect">
+                <option value="">-- 선택하세요 --</option>
+                <option value="한국">한국</option>
+                <option value="중국">중국</option>
+                <option value="일본">일본</option>
+            </select>
+        </div>
+
+        <div class="step hidden panel" id="stepEra">
+            <h2>2. 작품의 시대 선택</h2>
+            <small>선택한 범주 안에서 해당하는 시대만 보여줘요. (⌘ 또는 Ctrl 키로 복수 선택 가능)</small>
+            <label for="eraSelect">시대</label>
+            <select id="eraSelect" multiple size="6">
+                <option value="__ALL__">전체 선택</option>
+            </select>
+        </div>
+
+        <div class="step hidden panel" id="stepMaterial">
+            <h2>3. 재료 및 기법 선택</h2>
+            <small>크게 어떤 재료/형식을 가진 작품이 좋은지 골라보세요. (⌘ 또는 Ctrl 키로 복수 선택 가능)</small>
+            <label for="materialSelect">재료 / 형식</label>
+            <select id="materialSelect" multiple size="6">
+                <option value="__ALL__">전체 선택</option>
+            </select>
+        </div>
+
+        <div class="step hidden panel" id="stepArtist">
+            <h2>4. 작가 선택</h2>
+            <small>앞에서 고른 조건 안에 들어가는 작가만 나와요. (⌘ 또는 Ctrl 키로 복수 선택 가능)</small>
+            <label for="artistSelect">작가</label>
+            <select id="artistSelect" multiple size="6">
+                <option value="__ALL__">전체 선택</option>
+            </select>
+        </div>
+
+        <div class="step hidden panel" id="stepKeyword">
+            <h2>5. 추가 키워드 (선택)</h2>
+            <small>분위기, 주제 등을 해시태그처럼 적어도 좋아요. 예: #종교 #인체 #풍경</small>
+            <label for="keywordInput">키워드</label>
+            <input type="text" id="keywordInput" placeholder="작품 이름, 작가, 내용, 해시태그 등으로 검색">
+            <div class="button-row" style="margin-top:12px;">
+                <button class="btn btn-primary" id="recommendBtn">추천 결과 보기</button>
+            </div>
+        </div>
+
+        <div id="resultContainer" class="result panel hidden">
+            <div class="result-header">
+                <h2>✨ 추천 작품 결과</h2>
+            </div>
+            <div class="filters-summary" id="filtersSummary"></div>
+            <div id="resultContent"></div>
+
+            <div class="back-controls">
+                <button class="btn btn-secondary" id="resetBtn">🔁 처음부터 다시</button>
+                <label for="goBackSelect">또는 이 단계로 돌아가기:</label>
+                <select id="goBackSelect">
+                    <option value="">단계 선택</option>
+                    <option value="1">1단계 - 서양/동양 선택</option>
+                    <option value="1-2">1-2단계 - 지역 선택</option>
+                    <option value="2">2단계 - 시대 선택</option>
+                    <option value="3">3단계 - 재료/기법 선택</option>
+                    <option value="4">4단계 - 작가 선택</option>
+                    <option value="5">5단계 - 키워드 입력</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <section class="panel">
+        <h2>나만의 공간</h2>
+        <div class="subtitle">컬렉션, 연속 감상, 최근 본 작품, 취향 기반 추천, 직접 작품 추가</div>
+
+        <div>
+            <div class="mini-section-title">내 컬렉션</div>
+            <ul id="collectionList" class="list-small">
+                <li>아직 추가된 작품이 없습니다.</li>
+            </ul>
+            <!-- ✅ 컬렉션 비우기 버튼 추가 -->
+            <div class="button-row">
+                <button class="btn btn-secondary" onclick="clearCollection()">컬렉션 비우기</button>
+            </div>
+        </div>
+
+        <div>
+            <div class="mini-section-title">연속 감상 (플레이리스트)</div>
+            <ul id="playlist" class="list-small">
+                <li>재생할 작품이 없습니다.</li>
+            </ul>
+            <div class="button-row">
+                <button class="btn btn-primary" onclick="playNext()">다음 작품 감상</button>
+                <button class="btn btn-secondary" onclick="clearPlaylist()">플레이리스트 비우기</button>
+            </div>
+            <p id="nowPlaying" class="subtitle" style="margin-top:6px;">현재 감상 중: -</p>
+        </div>
+
+        <div>
+            <div class="mini-section-title">최근 본 작품</div>
+            <p id="lastViewed" class="subtitle">아직 감상한 작품이 없습니다. 작품 카드의 이미지를 눌러보세요.</p>
+        </div>
+
+        <div>
+            <div class="mini-section-title">내 취향 기반 추천 (간단 버전)</div>
+            <p class="subtitle">
+                내 컬렉션과 최근 본 작품의 감각 태그를 기준으로 비슷한 태그를 가진 작품을 점수로 추천합니다.
+            </p>
+            <ul id="recommendList" class="list-small">
+                <li>아직 데이터가 없어 추천을 계산할 수 없습니다.</li>
+            </ul>
+            <button class="btn btn-secondary" onclick="updateRecommendations()">추천 다시 계산</button>
+        </div>
+
+        <!-- 🔽 작품 추가 폼 (범주/시대/재료 추가 버전) -->
+        <div>
+            <div class="mini-section-title">작품 추가</div>
+            <p class="subtitle">
+                직접 새로운 작품을 데이터에 추가할 수 있어요.<br>
+                왼쪽 필터에서 고른 값들이 있다면, 입력을 비워두면 그 값이 자동으로 사용됩니다.
+            </p>
+
+            <label for="newTitle">제목</label>
+            <input id="newTitle" type="text" placeholder="예: 나만의 작품 제목" />
+
+            <label for="newArtist">작가</label>
+            <input id="newArtist" type="text" placeholder="예: 홍길동" />
+
+            <label for="newTradition">미술 범주 (서양/동양)</label>
+            <select id="newTradition">
+                <option value="">(현재 선택값 사용 또는 기본값)</option>
+                <option value="서양">서양미술</option>
+                <option value="동양">동양미술</option>
+            </select>
+
+            <label for="newEra">시대</label>
+            <input id="newEra" type="text" placeholder="예: 르네상스, 조선 후기, 현대 등" />
+
+            <label for="newMaterial">재료 및 기법</label>
+            <input id="newMaterial" type="text" placeholder="예: 유화, 지본 수묵담채, 목판화 등" />
+
+            <label for="newTags">태그 (쉼표로 구분)</label>
+            <input id="newTags" type="text" placeholder="예: 수묵화, 서정적, 산수" />
+
+            <label for="newImage">이미지 URL (선택)</label>
+            <input id="newImage" type="text" placeholder="이미지 링크를 넣지 않으면 자동 플레이스홀더가 사용됩니다." />
+
+            <div class="button-row">
+                <button class="btn btn-primary" onclick="addArtwork()">작품 추가</button>
+            </div>
+        </div>
+        <!-- 🔼 작품 추가 폼 끝 -->
+    </section>
+</main>
+
+    <footer>
+        <p style="text-align: center; font-size: 11px; color: #757575; padding-top: 10px;">
+            ArtMix 스타일로 재구성된 미술 작품 추천 프로그램 + 사용자 작품 추가 기능
+        </p>
+    </footer>
+    <footer>
+        <p style="text-align: center; font-size: 11px; color: #757575; padding-top: 10px;">
+            ArtMix 스타일로 재구성된 미술 작품 추천 프로그램 + 사용자 작품 추가 기능
+        </p>
+    </footer>
+
+    <!-- ✅ Firebase SDK 불러오기 (compat 버전, npm 필요 없음) -->
+    <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore-compat.js"></script>
+
+    <!-- ✅ Firebase 초기화 -->
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyBzsYHu7a07d9hsSdSHRg7_ASuVE9DlOFI",
+        authDomain: "artmix-app.firebaseapp.com",
+        projectId: "artmix-app",
+        storageBucket: "artmix-app.firebasestorage.app",
+        messagingSenderId: "323550477860",
+        appId: "1:323550477860:web:2bf6c78fda56d0dca548b1",
+        measurementId: "G-R76GB4HHKK"
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      // 전역에서 쓸 Firestore 객체
+      const db = firebase.firestore();
+    </script>
+
+    <!-- ✅ 기존 앱 로직 + Firestore 연동 -->
+    <script>
+    // ====== 샘플 작품 데이터 (기존 배열) ======
+    const artworks = [
+        {
+            "id": 1,
+            "title": "빗살무늬토기",
+            "artist": "미상",
+            "tradition": "동양",
+            "region": "한국",
+            "eraMain": "신석기",
+            "material": "토기, 선각 무늬",
+            "year": "기원전 4000–3000",
+            "image": "https://via.placeholder.com/400x250?text=빗살무늬토기",
+            "description": "신석기 대표 토기, 빗살무늬 장식",
+            "hashtags": ["토기", "신석기", "선사", "한국"],
+            "senseTags": ["단순", "거친", "역동적"]
+        },
+        {
+            "id": 49,
+            "title": "몽유도원도",
+            "artist": "안견",
+            "tradition": "동양",
+            "region": "한국",
+            "eraMain": "조선 전기",
+            "material": "지본 수묵담채",
+            "year": "1447 추정",
+            "image": "https://via.placeholder.com/400x250?text=몽유도원도",
+            "description": "이상향 도원, 궁중 화원 대표작",
+            "hashtags": ["회화", "수묵담채", "조선", "이상향", "안견", "한국"],
+            "senseTags": ["몽환적", "서정적", "부드러움"]
+        },
+        {
+            "id": 55,
+            "title": "인왕제색도",
+            "artist": "정선",
+            "tradition": "동양",
+            "region": "한국",
+            "eraMain": "조선 후기",
+            "material": "수묵담채",
+            "year": "1751",
+            "image": "https://via.placeholder.com/400x250?text=인왕제색도",
+            "description": "서울 인왕산 실경, 진경산수 절정",
+            "hashtags": ["회화", "수묵담채", "조선", "진경산수", "정선", "한국"],
+            "senseTags": ["역동적", "차가운", "극적"]
+        },
+        {
+            "id": 61,
+            "title": "씨름",
+            "artist": "김홍도",
+            "tradition": "동양",
+            "region": "한국",
+            "eraMain": "조선 후기",
+            "material": "수묵담채",
+            "year": "18C 후반",
+            "image": "https://via.placeholder.com/400x250?text=씨름",
+            "description": "역동적 풍속, 서민 문화",
+            "hashtags": ["회화", "풍속화", "조선", "씨름", "김홍도", "한국", "역동적"],
+            "senseTags": ["역동적", "따뜻한", "해학"]
+        },
+        {
+            "id": 150,
+            "title": "후가쿠 36경 – 가나가와의 큰 파도",
+            "artist": "가쓰시카 호쿠사이",
+            "tradition": "동양",
+            "region": "일본",
+            "eraMain": "에도시대",
+            "material": "목판화",
+            "year": "1831",
+            "image": "https://via.placeholder.com/400x250?text=후가쿠%2036경%20–%20가나가와의%20큰%20파도",
+            "description": "우키요에 절정, 동세와 색채 강조",
+            "hashtags": ["목판화", "우키요에", "에도", "파도", "호쿠사이", "일본", "역동적"],
+            "senseTags": ["그로테스크", "차가운", "역동적"]
+        },
+        {
+            "id": 171,
+            "title": "모나리자",
+            "artist": "레오나르도 다 빈치",
+            "tradition": "서양",
+            "region": "서양",
+            "eraMain": "르네상스",
+            "material": "유화",
+            "year": "1503경",
+            "image": "https://via.placeholder.com/400x250?text=모나리자",
+            "description": "스푸마토 기법",
+            "hashtags": ["회화", "유화", "르네상스", "다빈치", "초상화", "유럽"],
+            "senseTags": ["신비", "부드러움", "따뜻한"]
+        },
+        {
+            "id": 184,
+            "title": "야경",
+            "artist": "렘브란트",
+            "tradition": "서양",
+            "region": "서양",
+            "eraMain": "바로크",
+            "material": "유화",
+            "year": "1642",
+            "image": "https://via.placeholder.com/400x250?text=야경",
+            "description": "명암 대비·집단 초상",
+            "hashtags": ["회화", "유화", "바로크", "렘브란트", "명암", "유럽", "어두운"],
+            "senseTags": ["극적", "어두운", "차가운"]
+        },
+        {
+            "id": 227,
+            "title": "별이 빛나는 밤",
+            "artist": "고흐",
+            "tradition": "서양",
+            "region": "서양",
+            "eraMain": "후기 인상주의",
+            "material": "유화",
+            "year": "1889",
+            "image": "https://via.placeholder.com/400x250?text=별이%20빛나는%20밤",
+            "description": "표현적 하늘",
+            "hashtags": ["회화", "유화", "후기인상주의", "고흐", "하늘", "유럽", "몽환적", "불안한"],
+            "senseTags": ["몽환적", "불안한", "역동적", "차가운"]
+        },
+        {
+            "id": 251,
+            "title": "기억의 지속",
+            "artist": "달리",
+            "tradition": "서양",
+            "region": "서양",
+            "eraMain": "전위미술",
+            "material": "유화",
+            "year": "1931",
+            "image": "https://via.placeholder.com/400x250?text=기억의%20지속",
+            "description": "녹는 시계",
+            "hashtags": ["회화", "유화", "전위미술", "달리", "초현실주의", "몽환적", "유럽"],
+            "senseTags": ["몽환적", "신비", "그로테스크", "서정적"]
+        },
+        {
+            "id": 258,
+            "title": "캠벨 수프 캔",
+            "artist": "워홀",
+            "tradition": "서양",
+            "region": "서양",
+            "eraMain": "전위미술",
+            "material": "실크스크린",
+            "year": "1962",
+            "image": "https://via.placeholder.com/400x250?text=캠벨%20수프%20캔",
+            "description": "소비문화",
+            "hashtags": ["회화", "실크스크린", "전위미술", "워홀", "팝아트", "소비", "미국"],
+            "senseTags": ["단순", "차가운", "대중적"]
+        }
+    ];
+
+    const state = {
+        tradition: "",
+        region: "",
+        eraMain: [],	
+        material: [],	
+        artist: []	
+    };
+
+    let collection = [];
+    let playlist = [];
+    let lastViewedId = null;
+
+    const els = {
+        step1: document.getElementById("step1"),
+        stepRegion: document.getElementById("stepRegion"),
+        stepEra: document.getElementById("stepEra"),
+        stepMaterial: document.getElementById("stepMaterial"),
+        stepArtist: document.getElementById("stepArtist"),
+        stepKeyword: document.getElementById("stepKeyword"),
+        traditionSelect: document.getElementById("traditionSelect"),
+        regionSelect: document.getElementById("regionSelect"),
+        eraSelect: document.getElementById("eraSelect"),
+        materialSelect: document.getElementById("materialSelect"),
+        artistSelect: document.getElementById("artistSelect"),
+        keywordInput: document.getElementById("keywordInput"),
+        recommendBtn: document.getElementById("recommendBtn"),
+        resultContainer: document.getElementById("resultContainer"),
+        resultContent: document.getElementById("resultContent"),
+        filtersSummary: document.getElementById("filtersSummary"),
+        resetBtn: document.getElementById("resetBtn"),
+        goBackSelect: document.getElementById("goBackSelect"),
+        collectionListEl: document.getElementById("collectionList"),
+        playlistEl: document.getElementById("playlist"),
+        nowPlayingEl: document.getElementById("nowPlaying"),
+        recommendListEl: document.getElementById("recommendList"),
+        lastViewedEl: document.getElementById("lastViewed")
+    };
+
+    function show(el) { el.classList.remove("hidden"); }
+    function hide(el) { el.classList.add("hidden"); }
+
+    function resetSelect(selectEl, placeholder) {
+        selectEl.innerHTML = "";
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = placeholder || "-- 선택하세요 --";
+        selectEl.appendChild(opt);
+        
+        if (selectEl.hasAttribute('multiple')) {
+            const allOpt = document.createElement("option");
+            allOpt.value = "__ALL__";
+            allOpt.textContent = "전체 선택";
+            selectEl.appendChild(allOpt);
+            Array.from(selectEl.options).forEach(opt => opt.selected = false);
+        }
+        selectEl.value = "";
+    }
+
+    function getSelectedValues(selectEl) {
+        const selected = Array.from(selectEl.selectedOptions).map(o => o.value);
+        if (selected.includes("__ALL__")) {
+            return Array.from(selectEl.options)
+                .map(o => o.value)
+                .filter(v => v !== "" && v !== "__ALL__");
+        }
+        return selected.filter(v => v !== "" && v !== "__ALL__");
+    }
+
+    function filterArtworks(filterStep) {
+        return artworks.filter(a => {
+            if (state.tradition && a.tradition !== state.tradition) return false;
+            if (state.tradition === "동양" && state.region && a.region !== state.region) return false;
+            if (filterStep >= 2 && state.eraMain.length && !state.eraMain.includes(a.eraMain)) return false;
+            if (filterStep >= 3 && state.material.length && !state.material.includes(a.material)) return false;
+            if (filterStep >= 4 && state.artist.length && !state.artist.includes(a.artist)) return false;
+            return true;
+        });
+    }
+
+    function populateEraOptions() {
+        const list = filterArtworks(1);
+        const eras = Array.from(new Set(list.map(a => a.eraMain))).filter(e => e);
+        resetSelect(els.eraSelect, "-- 시대를 선택하세요 --");
+
+        eras.forEach(e => {
+            const opt = document.createElement("option");
+            opt.value = e;
+            opt.textContent = e;
+            els.eraSelect.appendChild(opt);
+        });
+        state.eraMain = [];
+        hide(els.stepMaterial);
+        hide(els.stepArtist);
+        hide(els.stepKeyword);
+        hide(els.resultContainer);
+    }
+
+    function populateMaterialOptions() {
+        const list = filterArtworks(2);
+        const materials = Array.from(new Set(list.map(a => a.material))).filter(m => m);
+        resetSelect(els.materialSelect, "-- 재료/형식을 선택하세요 --");
+
+        materials.forEach(m => {
+            const opt = document.createElement("option");
+            opt.value = m;
+            opt.textContent = m;
+            els.materialSelect.appendChild(opt);
+        });
+        state.material = [];
+        hide(els.stepArtist);
+        hide(els.stepKeyword);
+        hide(els.resultContainer);
+    }
+
+    function populateArtistOptions() {
+        const list = filterArtworks(3);
+        const artists = Array.from(new Set(list.map(a => a.artist))).filter(ar => ar);
+        resetSelect(els.artistSelect, "-- 작가를 선택하세요 --");
+
+        artists.forEach(ar => {
+            const opt = document.createElement("option");
+            opt.value = ar;
+            opt.textContent = ar;
+            els.artistSelect.appendChild(opt);
+        });
+        state.artist = [];
+        hide(els.stepKeyword);
+        hide(els.resultContainer);
+    }
+
+    function updateFiltersSummary() {
+        const parts = [];
+        if (state.tradition) parts.push(`**범주:** ${state.tradition === "서양" ? "서양미술" : "동양미술"}`);
+        if (state.tradition === "동양" && state.region) parts.push(`**지역:** ${state.region}`);
+        if (state.eraMain.length) parts.push(`**시대:** ${state.eraMain.join(", ")}`);
+        if (state.material.length) parts.push(`**재료/형식:** ${state.material.join(", ")}`);
+        if (state.artist.length) parts.push(`**작가:** ${state.artist.join(", ")}`);
+        const keyword = els.keywordInput.value.trim();
+        if (keyword) parts.push(`**키워드:** "${keyword}"`);
+        els.filtersSummary.innerHTML = parts.join(" &nbsp; | &nbsp; ");
+    }
+
+    function showResults() {
+        let list = filterArtworks(4);
+        const keywordRaw = els.keywordInput.value.trim();
+        const keyword = keywordRaw.replace(/#/g, "").toLowerCase();
+
+        if (keyword) {
+            list = list.filter(a => {
+                const text = [
+                    a.title,
+                    a.artist,
+                    a.description,
+                    (a.hashtags || []).join(" ")
+                ].join(" ").toLowerCase();
+                return text.indexOf(keyword) !== -1;
+            });
+        }
+
+        updateFiltersSummary();
+        els.resultContent.innerHTML = "";
+
+        if (list.length === 0) {
+            const div = document.createElement("div");
+            div.className = "no-result";
+            div.textContent = "조건에 맞는 작품을 찾지 못했어요. 키워드를 비우거나 상위 단계를 다시 선택해 보세요.";
+            els.resultContent.appendChild(div);
+            show(els.resultContainer);
+            return;
+        }
+
+        list.forEach(a => {
+            const card = document.createElement("div");
+            card.className = "art-card";
+
+            const imgWrap = document.createElement("div");
+            imgWrap.className = "art-image";
+            const img = document.createElement("img");
+            img.src = a.image;
+            img.alt = a.title;
+            img.onclick = () => viewArtwork(a.id);
+            imgWrap.appendChild(img);
+
+            const info = document.createElement("div");
+            info.className = "art-info";
+
+            const h3 = document.createElement("h3");
+            h3.textContent = `${a.title} (${a.year || "연도 미상"})`;
+            info.appendChild(h3);
+
+            const meta = document.createElement("p");
+            meta.innerHTML = `<strong>작가:</strong> ${a.artist} / <strong>시대:</strong> ${a.eraMain || "-"} / <strong>재료:</strong> ${a.material || "-"}`;
+            info.appendChild(meta);
+
+            const desc = document.createElement("p");
+            desc.textContent = a.description || "";
+            info.appendChild(desc);
+
+            if (a.hashtags && a.hashtags.length > 0) {
+                const chips = document.createElement("div");
+                chips.className = "chips";
+                a.hashtags.forEach(tag => {
+                    const span = document.createElement("span");
+                    span.className = "hashtag";
+                    span.textContent = `#${tag}`;
+                    chips.appendChild(span);
+                });
+                info.appendChild(chips);
+            }
+            
+            const btnRow = document.createElement("div");
+            btnRow.className = "button-row";
+            btnRow.style.marginTop = "6px";
+            
+            const btnCollection = document.createElement("button");
+            btnCollection.className = "btn btn-secondary";
+            btnCollection.textContent = "컬렉션에 추가";
+            btnCollection.onclick = () => addToCollection(a.id);
+
+            const btnPlaylist = document.createElement("button");
+            btnPlaylist.className = "btn btn-primary";
+            btnPlaylist.textContent = "연속 감상에 추가";
+            btnPlaylist.onclick = () => addToPlaylist(a.id);
+
+            btnRow.appendChild(btnCollection);
+            btnRow.appendChild(btnPlaylist);
+            info.appendChild(btnRow);
+            
+            card.appendChild(imgWrap);
+            card.appendChild(info);
+
+            els.resultContent.appendChild(card);
+        });
+
+        show(els.resultContainer);
+    }
+
+    function resetAll() {
+        state.tradition = "";
+        state.region = "";
+        state.eraMain = [];
+        state.material = [];
+        state.artist = [];
+        els.traditionSelect.value = "";
+        els.regionSelect.value = "";
+        resetSelect(els.eraSelect, "-- 시대를 선택하세요 --");
+        resetSelect(els.materialSelect, "-- 재료/형식을 선택하세요 --");
+        resetSelect(els.artistSelect, "-- 작가를 선택하세요 --");
+        els.keywordInput.value = "";
+        hide(els.stepRegion);
+        hide(els.stepEra);
+        hide(els.stepMaterial);
+        hide(els.stepArtist);
+        hide(els.stepKeyword);
+        hide(els.resultContainer);
+        els.goBackSelect.value = "";
+    }
+
+    function goBackTo(step) {
+        hide(els.resultContainer);
+        switch (step) {
+            case "1":
+                resetAll();
+                break;
+            case "1-2":
+                state.region = "";
+                state.eraMain = [];
+                state.material = [];
+                state.artist = [];
+                els.regionSelect.value = "";
+                els.eraSelect.selectedIndex = -1;
+                els.materialSelect.selectedIndex = -1;
+                els.artistSelect.selectedIndex = -1;
+                els.keywordInput.value = "";
+                show(els.stepRegion);
+                hide(els.stepEra);
+                hide(els.stepMaterial);
+                hide(els.stepArtist);
+                hide(els.stepKeyword);
+                break;
+            case "2":
+                state.eraMain = [];
+                state.material = [];
+                state.artist = [];
+                els.eraSelect.selectedIndex = -1;
+                els.materialSelect.selectedIndex = -1;
+                els.artistSelect.selectedIndex = -1;
+                els.keywordInput.value = "";
+                show(els.stepEra);
+                hide(els.stepMaterial);
+                hide(els.stepArtist);
+                hide(els.stepKeyword);
+                populateEraOptions();
+                break;
+            case "3":
+                state.material = [];
+                state.artist = [];
+                els.materialSelect.selectedIndex = -1;
+                els.artistSelect.selectedIndex = -1;
+                els.keywordInput.value = "";
+                show(els.stepMaterial);
+                hide(els.stepArtist);
+                hide(els.stepKeyword);
+                state.eraMain = getSelectedValues(els.eraSelect); 
+                populateMaterialOptions();
+                break;
+            case "4":
+                state.artist = [];
+                els.artistSelect.selectedIndex = -1;
+                els.keywordInput.value = "";
+                show(els.stepArtist);
+                hide(els.stepKeyword);
+                state.material = getSelectedValues(els.materialSelect); 
+                populateArtistOptions();
+                break;
+            case "5":
+                show(els.stepKeyword);
+                break;
+        }
+        els.goBackSelect.value = "";
+    }
+
+    // ===== 나만의 공간 로직 =====
+    function getArt(id) {
+        return artworks.find(a => a.id === id);
+    }
+    
+    function addToCollection(id) {
+        if (collection.indexOf(id) === -1) {
+            collection.push(id);
+            updateCollectionView();
+            updateRecommendations();
+        }
+    }
+
+    function updateCollectionView() {
+        els.collectionListEl.innerHTML = "";
+        if (collection.length === 0) {
+            els.collectionListEl.innerHTML = "<li>아직 추가된 작품이 없습니다.</li>";
+            return;
+        }
+        collection.forEach(id => {
+            const art = getArt(id);
+            if (!art) return;
+            const li = document.createElement("li");
+            li.textContent = `${art.title} (${art.artist})`;
+            els.collectionListEl.appendChild(li);
+        });
+    }
+
+    function addToPlaylist(id) {
+        playlist.push(id);
+        updatePlaylistView();
+    }
+
+    function updatePlaylistView() {
+        els.playlistEl.innerHTML = "";
+        if (playlist.length === 0) {
+            els.playlistEl.innerHTML = "<li>재생할 작품이 없습니다.</li>";
+            return;
+        }
+        playlist.forEach((id, index) => {
+            const art = getArt(id);
+            if (!art) return;
+            const li = document.createElement("li");
+            li.textContent = `${index + 1}. ${art.title} - ${art.artist}`;
+            els.playlistEl.appendChild(li);
+        });
+    }
+
+    function playNext() {
+        if (playlist.length === 0) {
+            els.nowPlayingEl.textContent = "현재 감상 중: -";
+            return;
+        }
+        const nextId = playlist.shift();
+        const art = getArt(nextId);
+        if (!art) {
+            updatePlaylistView();
+            return;
+        }
+        els.nowPlayingEl.textContent = `현재 감상 중: ${art.title} (${art.artist})`;
+        viewArtwork(nextId);
+        updatePlaylistView();
+    }
+
+    function clearPlaylist() {
+        playlist = [];
+        updatePlaylistView();
+        els.nowPlayingEl.textContent = "현재 감상 중: -";
+    }
+
+    function viewArtwork(id) {
+        const art = getArt(id);
+        if (!art) return;
+        lastViewedId = id;
+        els.lastViewedEl.textContent = `${art.title} (${art.artist}, ${art.year || "연도 미상"}) – ${art.description || ""}`;
+        updateRecommendations();
+    }
+    
+    function updateRecommendations() {
+        els.recommendListEl.innerHTML = "";
+
+        const tagCount = {};
+
+        collection.forEach(id => {
+            const art = getArt(id);
+            if (!art) return;
+            (art.senseTags || []).forEach(tag => {
+                tagCount[tag] = (tagCount[tag] || 0) + 1;
+            });
+        });
+
+        if (lastViewedId !== null) {
+            const art = getArt(lastViewedId);
+            if (art) {
+                (art.senseTags || []).forEach(tag => {
+                    tagCount[tag] = (tagCount[tag] || 0) + 2;
+                });
+            }
+        }
+
+        if (Object.keys(tagCount).length === 0) {
+            els.recommendListEl.innerHTML = "<li>컬렉션이나 최근 본 작품이 아직 없어 추천을 계산할 수 없습니다.</li>";
+            return;
+        }
+
+        const scores = artworks
+            .filter(a => a.id !== lastViewedId && !collection.includes(a.id))
+            .map(a => {
+                let score = 0;
+                (a.senseTags || []).forEach(tag => {
+                    if (tagCount[tag]) score += tagCount[tag];
+                });
+                return { art: a, score };
+            })
+            .filter(item => item.score > 0)
+            .sort((a, b) => b.score - a.score);
+
+        if (scores.length === 0) {
+            els.recommendListEl.innerHTML = "<li>비슷한 감각 태그를 가진 다른 작품이 없습니다.</li>";
+            return;
+        }
+
+        scores.slice(0, 5).forEach(item => {
+            const li = document.createElement("li");
+            li.textContent = `${item.art.title} (${item.art.artist}) – 점수: ${item.score}`;
+            els.recommendListEl.appendChild(li);
+        });
+    }
+
+    // ✅ Firestore에 저장된 사용자 작품들을 artworks 배열에 추가
+    function loadUserArtworksFromFirestore() {
+      if (!db) return;
+      db.collection("artworks").get()
+        .then((snapshot) => {
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            // title / artist가 없는 빈 문서는 무시
+            if (!data.title || !data.artist) return;
+
+            const currentIds = artworks.map(a => a.id || 0);
+            const maxId = currentIds.length ? Math.max.apply(null, currentIds) : 0;
+            const newId = maxId + 1;
+
+            artworks.push({
+              id: newId,
+              title: data.title,
+              artist: data.artist,
+              tradition: data.tradition || "서양",
+              region: data.region || (data.tradition === "동양" ? (data.region || "") : "서양"),
+              eraMain: data.eraMain || "",
+              material: data.material || "",
+              year: data.year || "",
+              image: data.image || ("https://via.placeholder.com/400x250?text=" + encodeURIComponent(data.title)),
+              description: data.description || "사용자가 직접 추가한 작품입니다.",
+              hashtags: data.hashtags || [],
+              senseTags: data.senseTags || []
+            });
+          });
+          console.log("Firestore에서 사용자 작품 불러오기 완료");
+        })
+        .catch((err) => {
+          console.error("Firestore에서 작품 불러오는 중 오류: ", err);
+        });
+    }
+
+    // ===== 작품 추가 (범주/시대/재료 필드 포함 + Firestore 저장) =====
+    function addArtwork() {
+        const titleInput = document.getElementById("newTitle");
+        const artistInput = document.getElementById("newArtist");
+        const tagsInput = document.getElementById("newTags");
+        const imageInput = document.getElementById("newImage");
+        const traditionInput = document.getElementById("newTradition");
+        const eraInput = document.getElementById("newEra");
+        const materialInput = document.getElementById("newMaterial");
+
+        const title = titleInput.value.trim();
+        const artist = artistInput.value.trim();
+        const tagsRaw = tagsInput.value.trim();
+        const image = imageInput.value.trim();
+        const traditionField = traditionInput.value;         // 서양 / 동양 / 빈값
+        const eraField = eraInput.value.trim();              // 자유 입력
+        const materialField = materialInput.value.trim();    // 자유 입력
+
+        if (!title || !artist) {
+            alert("제목과 작가는 반드시 입력해 주세요.");
+            return;
+        }
+
+        // 최종 tradition 결정: 폼 > state > 기본값("서양")
+        let tradition = traditionField || state.tradition || "서양";
+
+        // region 결정: 동양이면 현재 region 사용, 서양이면 "서양"
+        let region = "";
+        if (tradition === "동양") {
+            region = state.region || "";
+        } else {
+            region = "서양";
+        }
+
+        // 시대/재료: 폼에서 우선 사용, 없으면 현재 선택값 사용
+        const eraMain = eraField || state.eraMain[0] || "";
+        const material = materialField || state.material[0] || "";
+        const year = "";
+
+        const hashtags = tagsRaw
+            ? tagsRaw.split(",").map(t => t.trim()).filter(Boolean)
+            : [];
+        const senseTags = hashtags.slice();
+
+        const currentIds = artworks.map(a => a.id || 0);
+        const maxId = currentIds.length ? Math.max.apply(null, currentIds) : 0;
+        const newId = maxId + 1;
+
+        const description = "사용자가 직접 추가한 작품입니다.";
+
+        const newArt = {
+            id: newId,
+            title,
+            artist,
+            tradition,
+            region,
+            eraMain,
+            material,
+            year,
+            image: image || ("https://via.placeholder.com/400x250?text=" + encodeURIComponent(title)),
+            description,
+            hashtags,
+            senseTags
+        };
+
+        // 1) 화면에서 바로 쓰기 위해 로컬 배열에 추가
+        artworks.push(newArt);
+
+        // 2) Firestore에도 저장 → 다른 사용자도 볼 수 있게
+        if (db) {
+          db.collection("artworks").add({
+            title,
+            artist,
+            tradition,
+            region,
+            eraMain,
+            material,
+            year,
+            image: newArt.image,
+            description,
+            hashtags,
+            senseTags
+          }).then(() => {
+            console.log("Firestore에 새 작품 저장 완료");
+          }).catch((err) => {
+            console.error("Firestore 저장 중 오류: ", err);
+          });
+        }
+
+        // 입력값 초기화
+        titleInput.value = "";
+        artistInput.value = "";
+        tagsInput.value = "";
+        imageInput.value = "";
+        traditionInput.value = "";
+        eraInput.value = "";
+        materialInput.value = "";
+
+        alert("새 작품이 추가되었습니다! (Firestore에도 저장되었어요) 조건을 선택하고 '추천 결과 보기'를 눌러 확인해 보세요.");
+    }
+
+    // === 이벤트 연결 ===
+    els.traditionSelect.addEventListener("change", () => {
+        state.tradition = els.traditionSelect.value;
+        state.region = "";
+        if (!state.tradition) {
+            hide(els.stepRegion);
+            hide(els.stepEra);
+            hide(els.stepMaterial);
+            hide(els.stepArtist);
+            hide(els.stepKeyword);
+            hide(els.resultContainer);
+            return;
+        }
+
+        if (state.tradition === "동양") {
+            els.regionSelect.value = "";
+            show(els.stepRegion);
+            hide(els.stepEra);
+            hide(els.stepMaterial);
+            hide(els.stepArtist);
+            hide(els.stepKeyword);
+            hide(els.resultContainer);
+        } else {
+            state.region = "서양";
+            hide(els.stepRegion);
+            show(els.stepEra);
+            populateEraOptions();
+        }
+    });
+
+    els.regionSelect.addEventListener("change", () => {
+        state.region = els.regionSelect.value;
+        if (!state.region) {
+            hide(els.stepEra);
+            hide(els.stepMaterial);
+            hide(els.stepArtist);
+            hide(els.stepKeyword);
+            hide(els.resultContainer);
+            return;
+        }
+        show(els.stepEra);
+        populateEraOptions();
+    });
+
+    els.eraSelect.addEventListener("change", () => {
+        state.eraMain = getSelectedValues(els.eraSelect);
+        show(els.stepMaterial);
+        populateMaterialOptions();
+    });
+
+    els.materialSelect.addEventListener("change", () => {
+        state.material = getSelectedValues(els.materialSelect);
+        show(els.stepArtist);
+        populateArtistOptions();
+    });
+
+    els.artistSelect.addEventListener("change", () => {
+        state.artist = getSelectedValues(els.artistSelect);
+        show(els.stepKeyword);
+        hide(els.resultContainer);
+    });
+
+    els.recommendBtn.addEventListener("click", () => {
+        showResults();
+    });
+
+    els.resetBtn.addEventListener("click", () => {
+        resetAll();
+    });
+
+    els.goBackSelect.addEventListener("change", () => {
+        const val = els.goBackSelect.value;
+        if (!val) return;
+        goBackTo(val);
+    });
+
+    // 초기 렌더링 + Firestore에서 사용자 작품 불러오기
+    resetAll();
+    updateCollectionView();
+    updatePlaylistView();
+    updateRecommendations();
+    loadUserArtworksFromFirestore();
+    </script>
+</body>
+</html>
